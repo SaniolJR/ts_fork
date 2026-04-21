@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    options {
+        skipDefaultCheckout()
+    }
     stages {
         stage('Clone') {
             steps {
@@ -12,7 +15,6 @@ pipeline {
             steps {
                 echo 'Budowanie obrazów z pliku Dockerfile.build...'
                 sh 'docker build -f Dockerfile.build --target tester -t nest-api:test .'
-                sh "docker build -f Dockerfile.build --target runtime -t nest-api:${BUILD_NUMBER} -t nest-api:latest ."
             }
         }
         stage('Run Tests') {
@@ -24,6 +26,7 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 echo 'Wdrażanie...'
+                sh "docker build -f Dockerfile.build --target runtime -t nest-api:${BUILD_NUMBER} -t nest-api:latest ."
                 sh 'docker rm -f my-nest-api || true'
                 sh "docker run -d -p 3003:3003 --name my-nest-api nest-api:${BUILD_NUMBER}"
             }
@@ -36,7 +39,11 @@ pipeline {
         }
         stage('Publish') {
             steps {
-                echo "Wersja ${BUILD_NUMBER} gotowa!"
+                echo "Eksportowanie obrazu do pliku i archiwizacja w Jenkinsie..."
+                // Zapisujemy obraz do pliku .tar
+                sh "docker save nest-api:${BUILD_NUMBER} -o nest-api-v${BUILD_NUMBER}.tar"
+                // Archiwizujemy plik w Jenkinsie - to dodaje go do historii builda
+                archiveArtifacts artifacts: "nest-api-v${BUILD_NUMBER}.tar", fingerprint: true
             }
         }
     }
