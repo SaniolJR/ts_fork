@@ -14,7 +14,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Budowanie obrazów z pliku Dockerfile.build...'
-                sh 'docker build -f Dockerfile.build --target tester -t nest-api:test .'
+                sh "docker build -f Dockerfile.build --target tester -t nest-api:test -t nest-api:${BUILD_NUMBER} ."
             }
         }
         stage('Run Tests') {
@@ -25,18 +25,17 @@ pipeline {
         }
         stage('Deploy Container') {
             steps {
-                echo 'Pobieranie oficjalnego binaru kubectl (wersja idiotoodporna)...'
-                sh 'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"'
-                sh 'chmod +x ./kubectl'
-                
-                echo 'Wdrażanie do Minikube za pomocą pobranego kubectl...'
-                sh './kubectl apply -f nginx-deployment.yaml --kubeconfig /var/jenkins_home/.kube/config'
+                echo 'Budowanie obrazu wdrożeniowego w Minikube...'
+                sh 'minikube image build -t nest-api:v3 -f Dockerfile.error .'
+
+                echo 'Wdrażanie do Minikube...'
+                sh 'minikube kubectl -- apply -f nginx-deployment.yaml'
             }
         }
         stage('Smoke Test') {
             steps {
                 echo 'Uruchamianie skryptu weryfikacyjnego (Timeout 60s)...'
-                sh './verify_deploy.sh'
+                sh './verify_deploy_time.sh'
             }
         }
         stage('Publish') {
