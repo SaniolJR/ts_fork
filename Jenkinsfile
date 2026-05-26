@@ -30,7 +30,7 @@ pipeline {
                 sh 'chmod +x ./kubectl'
                 
                 echo 'Wdrażanie do Minikube za pomocą pobranego kubectl...'
-                sh './kubectl apply -f nginx-deployment.yaml'
+                sh './kubectl apply -f nginx-deployment.yaml --kubeconfig /var/jenkins_home/.kube/config'
             }
         }
         stage('Smoke Test') {

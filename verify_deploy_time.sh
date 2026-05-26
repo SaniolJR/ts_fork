@@ -7,8 +7,7 @@ TIMEOUT_LIMIT="60s"
 echo "=== Rozpoczęcie weryfikacji wdrożenia: ${DEPLOYMENT_NAME} ==="
 echo "Oczekiwanie na zakończenie rolloutu (Max: ${TIMEOUT_LIMIT})..."
 
-minikube kubectl -- rollout status deployment/${DEPLOYMENT_NAME} --timeout=${TIMEOUT_LIMIT}
-EXIT_CODE=$?
+./kubectl rollout status deployment/${DEPLOYMENT_NAME} --timeout=${TIMEOUT_LIMIT} --kubeconfig /var/jenkins_home/.kube/config
 
 echo "----------------------------------------------------"
 if [ $EXIT_CODE -eq 0 ]; then
