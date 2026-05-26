@@ -25,24 +25,22 @@ pipeline {
         }
         stage('Deploy Container') {
             steps {
-                echo 'Wdrażanie...'
-                sh "docker build -f Dockerfile.build --target runtime -t nest-api:${BUILD_NUMBER} -t nest-api:latest ."
-                sh 'docker rm -f my-nest-api || true'
-                sh "docker run -d -p 3003:3003 --name my-nest-api nest-api:${BUILD_NUMBER}"
+                echo 'Wdrażanie do Minikube...'
+                sh 'minikube kubectl -- apply -f nginx-deployment.yaml'
             }
         }
         stage('Smoke Test') {
             steps {
-                echo 'Smoke Test (Inżynierska weryfikacja)...'
-                sh 'curl -f http://localhost:3003 || echo "Aplikacja działa, ale Jenkins nie widzi jej po localhost - to normalne w Dockerze!"'
+                echo 'Uruchamianie skryptu weryfikacyjnego (Timeout 60s)...'
+                sh './verify_deploy.sh'
             }
         }
         stage('Publish') {
             steps {
                 echo "Eksportowanie obrazu do pliku i archiwizacja w Jenkinsie..."
-                // Zapisujemy obraz do pliku .tar
+                // Zapisywanie obrazu do pliku .tar
                 sh "docker save nest-api:${BUILD_NUMBER} -o nest-api-v${BUILD_NUMBER}.tar"
-                // Archiwizujemy plik w Jenkinsie - to dodaje go do historii builda
+                // Archiwizacja pliku w Jenkinsie - to dodaje go do historii builda
                 archiveArtifacts artifacts: "nest-api-v${BUILD_NUMBER}.tar", fingerprint: true
             }
         }
