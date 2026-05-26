@@ -25,8 +25,12 @@ pipeline {
         }
         stage('Deploy Container') {
             steps {
-                echo 'Wdrażanie do Minikube...'
-                sh 'kubectl apply -f nginx-deployment.yaml'
+                echo 'Pobieranie oficjalnego binaru kubectl (wersja idiotoodporna)...'
+                sh 'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"'
+                sh 'chmod +x ./kubectl'
+                
+                echo 'Wdrażanie do Minikube za pomocą pobranego kubectl...'
+                sh './kubectl apply -f nginx-deployment.yaml'
             }
         }
         stage('Smoke Test') {
