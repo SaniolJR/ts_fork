@@ -25,8 +25,9 @@ pipeline {
         }
         stage('Deploy Container') {
             steps {
-                echo 'Budowanie obrazu wdrożeniowego w Minikube...'
-                sh 'minikube image build -t nest-api:v3 -f Dockerfile.error .'
+                echo 'Budowanie obrazu wdrożeniowego v2...'
+                sh 'docker build -f Dockerfile.build --target runtime -t nest-api:v2 .'
+                sh 'minikube image load nest-api:v2'
 
                 echo 'Wdrażanie do Minikube...'
                 sh 'minikube kubectl -- apply -f nginx-deployment.yaml'
