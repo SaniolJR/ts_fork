@@ -26,7 +26,7 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 echo 'Wdrażanie do Minikube...'
-                sh 'minikube kubectl -- apply -f nginx-deployment.yaml'
+                sh 'kubectl apply -f nginx-deployment.yaml'
             }
         }
         stage('Smoke Test') {
