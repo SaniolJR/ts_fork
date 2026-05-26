@@ -25,13 +25,16 @@ pipeline {
         }
         stage('Prepare Minikube') {
             steps {
-                echo 'Sprawdzanie i uruchamianie kontenera minikube...'
+                echo 'Pobieranie i uruchamianie Minikube lokalnie w środowisku Jenkinsa...'
                 sh '''
-                    if ! docker inspect -f '{{.State.Running}}' minikube >/dev/null 2>&1; then
-                        docker start minikube >/dev/null
+                    if [ ! -f ./minikube ]; then
+                        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+                        chmod +x minikube-linux-amd64
+                        mv minikube-linux-amd64 minikube
                     fi
-
-                    docker inspect -f '{{.State.Running}}' minikube | grep -qx true
+                    
+                    # Wymuszenie startu klastra z driverem docker (wsparcie np. dla kontenera Jenkins)
+                    ./minikube start --force --driver=docker
                 '''
             }
         }
@@ -41,12 +44,10 @@ pipeline {
                 sh "docker build -f Dockerfile.build --target runtime -t nest-api:v2 -t nest-api:${BUILD_NUMBER} ."
 
                 echo 'Ładowanie obrazu do runtime Minikube...'
-                sh "docker save nest-api:v2 nest-api:${BUILD_NUMBER} -o nest-api-v${BUILD_NUMBER}.tar"
-                sh "docker cp nest-api-v${BUILD_NUMBER}.tar minikube:/tmp/nest-api-v${BUILD_NUMBER}.tar"
-                sh "docker exec minikube ctr -n=k8s.io images import /tmp/nest-api-v${BUILD_NUMBER}.tar"
+                sh './minikube image load nest-api:v2'
 
                 echo 'Wdrażanie do Minikube...'
-                sh 'docker exec -i minikube /var/lib/minikube/binaries/v1.35.1/kubectl apply -f - < nginx-deployment.yaml'
+                sh './minikube kubectl -- apply -f nginx-deployment.yaml'
             }
         }
         stage('Smoke Test') {
