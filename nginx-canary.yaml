@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-production
+  name: nginx-canary
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: nginx
@@ -11,7 +11,7 @@ spec:
     metadata:
       labels:
         app: nginx
-        track: production
+        track: canary
     spec:
       containers:
       - name: nest-container

@@ -58,11 +58,23 @@ pipeline {
         }
         stage('Publish') {
             steps {
-                echo "Eksportowanie obrazu do pliku i archiwizacja w Jenkinsie..."
+                echo "Eksportowanie obrazu do pliku .tar i archiwizacja w Jenkinsie..."
                 // Zapisywanie obrazu do pliku .tar
                 sh "docker save nest-api:v2 nest-api:${BUILD_NUMBER} -o nest-api-v${BUILD_NUMBER}.tar"
                 // Archiwizacja pliku w Jenkinsie - to dodaje go do historii builda
                 archiveArtifacts artifacts: "nest-api-v${BUILD_NUMBER}.tar", fingerprint: true
+
+                echo "Eksportowanie obrazu do Docker Hub..."
+                //eksport obrazu do dockerhub, logowanie jest też zautomatyzowane
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+                        docker tag nest-api:v2 "$DOCKER_USER/nest-api:${BUILD_NUMBER}"
+                        docker tag nest-api:v2 "$DOCKER_USER/nest-api:latest"
+                        docker push "$DOCKER_USER/nest-api:${BUILD_NUMBER}"
+                        docker push "$DOCKER_USER/nest-api:latest"
+                    '''
+                }
             }
         }
     }
