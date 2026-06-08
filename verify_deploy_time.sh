@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Konfiguracja parametrów
-DEPLOYMENT_NAME="nginx-deployment"
+DEPLOYMENT_NAME="nginx-production"
 TIMEOUT_LIMIT="60s"
 
 echo "=== Rozpoczęcie weryfikacji wdrożenia: ${DEPLOYMENT_NAME} ==="
