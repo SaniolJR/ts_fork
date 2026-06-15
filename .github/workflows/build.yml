@@ -63,3 +63,10 @@ jobs:
 
       - name: Uruchomienie buildu
         run: npm run build
+
+      - name: Upload artefaktu buildu
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-dist
+          path: dist/
+          if-no-files-found: error
